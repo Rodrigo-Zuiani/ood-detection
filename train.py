@@ -2,11 +2,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
-from models.resnet import ResNet18
+from models.resnet import BasicBlock, ResNet18
 from dataset.cifar100 import trainloader, testloader
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = ResNet18(num_classes=100).to(device)
+model = ResNet18(block=BasicBlock, num_blocks=[2, 2, 2, 2], num_classes=100).to(device)
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
