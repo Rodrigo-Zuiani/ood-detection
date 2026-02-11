@@ -56,7 +56,7 @@ logging.basicConfig(
     level=logging.INFO,  # INFO, DEBUG, WARNING, ERROR
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
-        logging.FileHandler(log_file),
+        logging.FileHandler("logs/logging.txt"),
         logging.StreamHandler()  # prints to console
     ]
 )
