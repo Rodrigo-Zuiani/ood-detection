@@ -41,11 +41,13 @@ model = ResNet18(block=BasicBlock, num_blocks=[2, 2, 2, 2], num_classes=100).to(
 
 criterion = nn.CrossEntropyLoss()
 lr = 0.1
-weight_decay = 0
+weight_decay = 5e-4
 optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=weight_decay)
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
+# scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
 
 num_epochs = 350
+scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs)
+
 train_losses, train_acc_list, test_acc_list = [], [], []
 
 # Make sure folders exist
