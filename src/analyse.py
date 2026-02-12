@@ -85,7 +85,9 @@ for cp_file in cp_file_names:
         class_means[c] = features[idx].mean(dim=0)
 
     # NC2: Analyze class mean distances
-    dist_matrix = torch.cdist(class_means, class_means, p=2) # Class mean distance for 1 epoch [C, C]
+    global_class_mean = class_means.mean(dim=0, keepdim=True)
+    class_means_centered = class_means - global_class_mean
+    dist_matrix = torch.cdist(class_means_centered, class_means_centered, p=2) # Class mean distance for 1 epoch [C, C]
     pairwise_distances = dist_matrix[torch.triu(torch.ones_like(dist_matrix), diagonal=1).bool()] # Upper triangle
     
     mean_dist = pairwise_distances.mean()
@@ -118,7 +120,6 @@ for cp_file in cp_file_names:
     
     # Normalize by total number of samples AND feature dimension
     # within_class_var /= (features.size(0) * d)
-    Sw /= features.size(0) 
     within_class_var = torch.trace(Sw) / (features.size(0) * d)
     print(f"\n  NC1 Metrics (Within-Class Variance):")
     print(f"    Within-class variance (per dim per sample): {within_class_var:.6f}")
