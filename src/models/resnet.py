@@ -56,7 +56,7 @@ class ResNet18(nn.Module):
         out = self.layer4(out)
         out = self.avgpool(out)
         out = torch.flatten(out, 1)
-        return x
+        return out
     
     def forward(self, x):
         out = self.forward_features(x)

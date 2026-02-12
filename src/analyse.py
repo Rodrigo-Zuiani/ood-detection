@@ -46,7 +46,7 @@ with torch.no_grad():
         features.append(z.cpu())
         labels.append(y)
 
-features = torch.cat(features)  # [N, d]
+features = torch.cat(features)  # [N, d] [50000, 3, 32, 32]
 print(features.size())
-labels = torch.cat(labels)      # [N]
+labels = torch.cat(labels)      # [N] ([50000, 3, 32, 32]
 print(features.size())
