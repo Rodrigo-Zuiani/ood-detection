@@ -71,7 +71,7 @@ for cp_file in cp_file_names:
 
     for c in range(num_classes):
         idx = labels == c               # boolean mask : True where labels is class C, otherwise False
-        if len(sum(idx) == 0):
+        if idx.sum() == 0:
             continue
         class_means[c] = features[idx].mean(dim=0)
 
