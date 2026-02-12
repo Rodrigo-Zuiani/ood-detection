@@ -53,24 +53,24 @@ scheduler = optim.lr_scheduler.CosineAnnealingLR(
     T_max=num_epochs
 )
 
-resume_path = "checkpoints/resnet18_cifar100_epoch_350.pt"
+# resume_path = "checkpoints/resnet18_cifar100_epoch_350.pt"
 start_epoch = 0
 
-if os.path.exists(resume_path):
-    checkpoint = torch.load(resume_path, map_location=device)
-    model.load_state_dict(checkpoint["model_state"])
-    optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-    start_epoch = checkpoint["epoch"]
+# if os.path.exists(resume_path):
+#     checkpoint = torch.load(resume_path, map_location=device)
+#     model.load_state_dict(checkpoint["model_state"])
+#     optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+#     start_epoch = checkpoint["epoch"]
 
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(
-        optimizer,
-        T_max=num_epochs,
-        last_epoch=start_epoch-1
-    )
+#     scheduler = optim.lr_scheduler.CosineAnnealingLR(
+#         optimizer,
+#         T_max=num_epochs,
+#         last_epoch=start_epoch-1
+#     )
 
-    print(f"Resuming from epoch {start_epoch}")
+#     print(f"Resuming from epoch {start_epoch}")
 
-# scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs)
+
 
 train_losses, train_acc_list, test_acc_list = [], [], []
 
