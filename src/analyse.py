@@ -34,8 +34,9 @@ trainloader, testloader, classes = get_cifar100_loaders(
 
 features = []
 labels = []
+checkpoint = torch.load("src/checkpoints/resnet18_cifar100_epoch_020.pt", weights_only=True)
+model.load_state_dict(checkpoint['model_state'])
 
-model.load_state_dict(torch.load("checkpoints/resnet18_cifar100_epoch_020.pt", weights_only=True))
 model.eval()
 
 with torch.no_grad():
