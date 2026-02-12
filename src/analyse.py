@@ -103,10 +103,8 @@ for cp_file in cp_file_names:
     print(f"    Range (max-min): {(max_dist - min_dist):.4f}")
     
     # Within class variance (NC1) --> Variability Collapse
-    # FIXED: The issue was here - you were using .mean() which averages over BOTH dimensions
-    # This gives you average variance per class, not per dimension per sample
-    within_class_var = 0.0
-
+    # within_class_var = 0.0
+    Sw = torch.zeros(d, d) 
     for c in range(num_classes):
         idx = labels == c
         if idx.sum() == 0:
@@ -115,11 +113,13 @@ for cp_file in cp_file_names:
         mu_c = class_means[c]               # [d] the mean for every d feature
         
         # Compute sum of squared deviations for this class
-        within_class_var += ((z_c - mu_c)**2).sum()
-
-    # Normalize by total number of samples AND feature dimension
-    within_class_var /= (features.size(0) * d)
+        centered = z_c - mu_c
+        Sw += (centered.T @ centered)
     
+    # Normalize by total number of samples AND feature dimension
+    # within_class_var /= (features.size(0) * d)
+    Sw /= features.size(0) 
+    within_class_var = torch.trace(Sw) / (features.size(0) * d)
     print(f"\n  NC1 Metrics (Within-Class Variance):")
     print(f"    Within-class variance (per dim per sample): {within_class_var:.6f}")
     
