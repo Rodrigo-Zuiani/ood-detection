@@ -93,8 +93,8 @@ for cp_file in cp_file_names:
         mu_c = class_means[c]               # [d]
         within_class_var += ((z_c - mu_c)**2).sum() 
 
-    within_class_var /= (features.size(0) * d)
-    
+    within_class_var /= num_classes
+    print(within_class_var)
     wt_class_var[epoch] = within_class_var
     distance_means_dict[epoch] = pairwise_distances
     std_means_dict[epoch] = std_dist
