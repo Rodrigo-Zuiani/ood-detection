@@ -12,4 +12,4 @@
 source source .venv/bin/activate
 
 # Run your Python script
-python -m src.train
+python3 -m src.train

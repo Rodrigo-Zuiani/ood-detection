@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
-from models.resnet import BasicBlock, ResNet18
-from dataset.cifar100 import get_cifar100_loaders
+from .models.resnet import BasicBlock, ResNet18
+from .dataset.cifar100 import get_cifar100_loaders
 import os
 import random
 import numpy as np
