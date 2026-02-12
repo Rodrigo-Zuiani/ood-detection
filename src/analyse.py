@@ -87,11 +87,13 @@ for cp_file in cp_file_names:
 
     for c in range(num_classes):
         idx = labels == c
+        if idx.sum() == 0:
+            continue
         z_c = features[idx]                 # [N_c, d]
         mu_c = class_means[c]               # [d]
-        within_class_var += ((z_c - mu_c)**2).sum()
+        within_class_var += ((z_c - mu_c)**2).sum() 
 
-    within_class_var /= features.size(0)
+    within_class_var /= (features.size(0) * d)
     
     wt_class_var[epoch] = within_class_var
     distance_means_dict[epoch] = pairwise_distances
