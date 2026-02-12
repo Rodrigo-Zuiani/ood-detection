@@ -33,8 +33,7 @@ trainloader, testloader, classes = get_cifar100_loaders(
     generator=g,
     worker_init_fn=worker_init_fn)
 
-features = []
-labels = []
+
 epochs = []
 checkpoint_folder = "src/checkpoints"
 cp_file_names = os.listdir(checkpoint_folder)
@@ -51,16 +50,18 @@ for cp_file in cp_file_names:
     epoch = checkpoint["epoch"]
     epochs.append(epoch)
     model.eval()
+    features_list = []
+    labels_list = []
 
     with torch.no_grad():
         for x, y in trainloader:
             x = x.to(device)
             z = model.forward_features(x)  # penultimate features before FC
-            features.append(z.cpu())
-            labels.append(y)
+            features_list.append(z.cpu())
+            labels_list.append(y)
 
-    features = torch.cat(features)  # [N, d] [50000, 512] for cifar-100
-    labels = torch.cat(labels)      # [N] ([50000]
+    features = torch.cat(features_list)  # [N, d] [50000, 512] for cifar-100
+    labels = torch.cat(labels_list)      # [N] ([50000]
 
 
     # Class Means Distances (NC2) --> Simplex ETF Structure
