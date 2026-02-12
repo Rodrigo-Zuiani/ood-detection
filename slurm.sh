@@ -12,4 +12,4 @@
 source source .venv/bin/activate
 
 # Run your Python script
-python /home/ensta/ensta-baptista/ood-detection/train.py
+python -m src.train
