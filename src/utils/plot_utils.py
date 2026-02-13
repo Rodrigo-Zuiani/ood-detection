@@ -173,10 +173,10 @@ def plot_nc_comparison(metrics_id, metrics_ood, save_path):
     plt.close()
     print(f"Saved comparison plot to {save_path}")
     
-def plot_nc2_nc3_multilayer(metrics_all, layer_names, save_path, title_prefix=""):
+def plot_nc_multilayer(metrics_all, layer_names, save_path, title_prefix=""):
     """
-    Plot NC2 (mean pairwise distance) and NC3 (mean cosine similarity)
-    for multiple layers on the same figure.
+    Plot NC1 (within-class variance), NC2 (mean pairwise distance),
+    and optionally NC3 for multiple layers on the same figure.
 
     Args:
         metrics_all: list of metrics dictionaries (one per layer)
@@ -194,31 +194,41 @@ def plot_nc2_nc3_multilayer(metrics_all, layer_names, save_path, title_prefix=""
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
+    # NC1: Within-Class Variance
+    for metrics, name in zip(metrics_all, layer_names):
+        epochs = metrics['epochs']
+        wt_var = [metrics['nc1']['within_class_var'][e] for e in epochs]
+        axes[0].plot(epochs, wt_var, marker='o', label=name)
+
+    axes[0].set_title(f"{prefix}NC1: Within-Class Variance", fontweight='bold')
+    axes[0].set_xlabel("Epoch")
+    axes[0].set_ylabel("Within-Class Variance")
+    axes[0].set_yscale('log')
+    axes[0].grid(True, alpha=0.3)
+    axes[0].legend()
+
     # NC2: Mean Pairwise Distance
     for metrics, name in zip(metrics_all, layer_names):
-
         epochs = metrics['epochs']
         mean_dists = [metrics['nc2']['mean_dist'][e] for e in epochs]
         stds = [metrics['nc2']['std_dist'][e] for e in epochs]
 
-        axes[0].plot(epochs, mean_dists, marker='o', label=name)
-
-        axes[0].fill_between(
+        axes[1].plot(epochs, mean_dists, marker='o', label=name)
+        axes[1].fill_between(
             epochs,
             [m - s for m, s in zip(mean_dists, stds)],
             [m + s for m, s in zip(mean_dists, stds)],
             alpha=0.15
         )
 
-    axes[0].set_title(f"{prefix}NC2: Mean Pairwise Distance", fontweight='bold')
-    axes[0].set_xlabel("Epoch")
-    axes[0].set_ylabel("Distance")
-    axes[0].grid(True, alpha=0.3)
-    axes[0].legend()
+    axes[1].set_title(f"{prefix}NC2: Mean Pairwise Distance", fontweight='bold')
+    axes[1].set_xlabel("Epoch")
+    axes[1].set_ylabel("Distance")
+    axes[1].grid(True, alpha=0.3)
+    axes[1].legend()
 
- 
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
+    print(f"Saved multilayer NC1/NC2 plot to {save_path}")
 
-    print(f"Saved multilayer NC2 plot to {save_path}")

@@ -27,7 +27,7 @@ from .utils.plot_utils import (
     plot_nc1_nc2_metrics,
     plot_nc3_metrics,
     plot_nc_comparison,
-    plot_nc2_nc3_multilayer
+    plot_nc_multilayer
 )
 
 
@@ -255,21 +255,8 @@ def run_id_multilayer():
         metrics_ID_all.append(metrics_ID)
 
 
-    plot_nc1_nc2_metrics(
-        metrics_ID,
-        save_path=os.path.join(config['plots_folder'], 'nc_metrics_ID.png'),
-        title_prefix="ID (CIFAR-100)"
-    )
-
-
-    plot_nc3_metrics(
-        metrics_ID,
-        save_path=os.path.join(config['plots_folder'], 'nc3_self_duality_ID.png'),
-        title_prefix="ID (CIFAR-100)"
-    )
-
     layer_names = ["conv1", "layer1", "layer2", "layer3", "layer4"]
-    plot_nc2_nc3_multilayer(
+    plot_nc_multilayer(
         metrics_all=metrics_ID_all,
         layer_names =layer_names,
         save_path=os.path.join(config['plots_folder'], 'nc2_nc3_multilayer.png'),
