@@ -148,7 +148,7 @@ def main():
         # NC3: Self-Duality
         # ========================================================
         nc3_results = compute_nc3_metrics(model, class_means)
-        nc3_results_OOD = compute_nc3_metrics(model, class_means_OOD)
+        # nc3_results_OOD = compute_nc3_metrics(model, class_means_OOD)
         
         # print("\n  NC3 Metrics (ID / OOD):")
         # print(f"    Mean cosine similarity: {nc3_results['mean_cos']:.4f} / {nc3_results_OOD['mean_cos']:.4f}")
@@ -160,8 +160,8 @@ def main():
             metrics['nc3'][key][epoch] = nc3_results[key]
         
         # Store OOD metrics
-        for key in ['mean_cos', 'std_cos', 'min_cos']:
-            metrics_OOD['nc3'][key][epoch] = nc3_results_OOD[key]
+        # for key in ['mean_cos', 'std_cos', 'min_cos']:
+        #     metrics_OOD['nc3'][key][epoch] = nc3_results_OOD[key]
         
         print("=" * 80)
     
@@ -191,11 +191,11 @@ def main():
         title_prefix="OOD (SVHN)"
     )
     
-    plot_nc3_metrics(
-        metrics_OOD,
-        save_path=os.path.join(config['plots_folder'], 'nc3_self_duality_OOD.png'),
-        title_prefix="OOD (SVHN)"
-    )
+    # plot_nc3_metrics(
+    #     metrics_OOD,
+    #     save_path=os.path.join(config['plots_folder'], 'nc3_self_duality_OOD.png'),
+    #     title_prefix="OOD (SVHN)"
+    # )
     
     # Plot comparison (ID vs OOD)
     plot_nc_comparison(
