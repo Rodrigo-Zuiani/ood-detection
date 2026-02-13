@@ -104,3 +104,97 @@ def plot_nc3_metrics(metrics, save_path):
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"Saved NC3 plot to {save_path}")
+
+def plot_nc_comparison(metrics_id, metrics_ood, save_path):
+    """
+    Create comparison plots showing ID vs OOD metrics side by side.
+    
+    Args:
+        metrics_id: Dictionary containing in-distribution metrics
+        metrics_ood: Dictionary containing out-of-distribution metrics
+        save_path: Path to save the figure
+    """
+    epochs_id = metrics_id['epochs']
+    epochs_ood = metrics_ood['epochs']
+    
+    # Extract ID metrics
+    wt_var_id = [metrics_id['nc1']['within_class_var'][e] for e in epochs_id]
+    mean_dist_id = [metrics_id['nc2']['mean_dist'][e] for e in epochs_id]
+    cv_id = [metrics_id['nc2']['cv'][e] for e in epochs_id]
+    nc3_id = [metrics_id['nc3']['mean_cos'][e] for e in epochs_id]
+    
+    # Extract OOD metrics
+    wt_var_ood = [metrics_ood['nc1']['within_class_var'][e] for e in epochs_ood]
+    mean_dist_ood = [metrics_ood['nc2']['mean_dist'][e] for e in epochs_ood]
+    cv_ood = [metrics_ood['nc2']['cv'][e] for e in epochs_ood]
+    nc3_ood = [metrics_ood['nc3']['mean_cos'][e] for e in epochs_ood]
+    
+    # Create figure with 2x2 subplots
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+    
+    # NC1: Within-class variance
+    axes[0, 0].plot(epochs_id, wt_var_id, 'b-o', linewidth=2, markersize=6, label='ID (CIFAR-100)')
+    axes[0, 0].plot(epochs_ood, wt_var_ood, 'r--s', linewidth=2, markersize=6, label='OOD (SVHN)')
+    axes[0, 0].set_title("NC1: Within-Class Variance", fontsize=12, fontweight='bold')
+    axes[0, 0].set_xlabel("Epoch")
+    axes[0, 0].set_ylabel("Within-Class Variance")
+    axes[0, 0].set_yscale('log')
+    axes[0, 0].grid(True, alpha=0.3)
+    axes[0, 0].legend()
+    
+    # NC2: Mean pairwise distance
+    axes[0, 1].plot(epochs_id, mean_dist_id, 'b-o', linewidth=2, markersize=6, label='ID (CIFAR-100)')
+    axes[0, 1].plot(epochs_ood, mean_dist_ood, 'r--s', linewidth=2, markersize=6, label='OOD (SVHN)')
+    axes[0, 1].set_title("NC2: Mean Pairwise Distance", fontsize=12, fontweight='bold')
+    axes[0, 1].set_xlabel("Epoch")
+    axes[0, 1].set_ylabel("Distance")
+    axes[0, 1].grid(True, alpha=0.3)
+    axes[0, 1].legend()
+    
+    # NC2: Coefficient of variation
+    axes[1, 0].plot(epochs_id, cv_id, 'b-o', linewidth=2, markersize=6, label='ID (CIFAR-100)')
+    axes[1, 0].plot(epochs_ood, cv_ood, 'r--s', linewidth=2, markersize=6, label='OOD (SVHN)')
+    axes[1, 0].set_title("NC2: Coefficient of Variation", fontsize=12, fontweight='bold')
+    axes[1, 0].set_xlabel("Epoch")
+    axes[1, 0].set_ylabel("CV (Std/Mean)")
+    axes[1, 0].grid(True, alpha=0.3)
+    axes[1, 0].legend()
+    
+    # NC3: Self-duality
+    axes[1, 1].plot(epochs_id, nc3_id, 'b-o', linewidth=2, markersize=6, label='ID (CIFAR-100)')
+    axes[1, 1].plot(epochs_ood, nc3_ood, 'r--s', linewidth=2, markersize=6, label='OOD (SVHN)')
+    axes[1, 1].set_title("NC3: Mean Cosine Similarity", fontsize=12, fontweight='bold')
+    axes[1, 1].set_xlabel("Epoch")
+    axes[1, 1].set_ylabel("Cosine Similarity")
+    axes[1, 1].set_ylim(0, 1.05)
+    axes[1, 1].grid(True, alpha=0.3)
+    axes[1, 1].legend()
+    
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f"Saved comparison plot to {save_path}")
+    
+    # Print summary statistics
+    print("\n" + "="*80)
+    print("NEURAL COLLAPSE COMPARISON: ID vs OOD")
+    print("="*80)
+    
+    final_epoch_id = epochs_id[-1]
+    final_epoch_ood = epochs_ood[-1]
+    
+    print(f"\nFinal Epoch Comparison (Epoch {final_epoch_id}):")
+    print("-"*80)
+    print(f"{'Metric':<30} {'ID (CIFAR-100)':<20} {'OOD (SVHN)':<20}")
+    print("-"*80)
+    print(f"{'NC1: Within-class var':<30} {wt_var_id[-1]:<20.6f} {wt_var_ood[-1]:<20.6f}")
+    print(f"{'NC2: Mean distance':<30} {mean_dist_id[-1]:<20.4f} {mean_dist_ood[-1]:<20.4f}")
+    print(f"{'NC2: CV':<30} {cv_id[-1]:<20.4f} {cv_ood[-1]:<20.4f}")
+    print(f"{'NC3: Mean cosine sim':<30} {nc3_id[-1]:<20.4f} {nc3_ood[-1]:<20.4f}")
+    print("-"*80)
+    
+    print("\nInterpretation:")
+    print("- Higher NC1 (within-class var) for OOD → OOD features less collapsed")
+    print("- Different NC2 values → Different class separation patterns")
+    print("- Lower NC3 for OOD → Classifier weights less aligned with OOD means")
+    print("="*80 + "\n")
