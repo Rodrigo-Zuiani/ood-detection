@@ -135,7 +135,6 @@ def plot_nc_comparison(metrics_id, metrics_ood, save_path):
     wt_var_ood = [metrics_ood['nc1']['within_class_var'][e] for e in epochs_ood]
     mean_dist_ood = [metrics_ood['nc2']['mean_dist'][e] for e in epochs_ood]
     cv_ood = [metrics_ood['nc2']['cv'][e] for e in epochs_ood]
-    nc3_ood = [metrics_ood['nc3']['mean_cos'][e] for e in epochs_ood]
     
     # Create figure with 2x2 subplots
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
@@ -168,41 +167,80 @@ def plot_nc_comparison(metrics_id, metrics_ood, save_path):
     axes[1, 0].grid(True, alpha=0.3)
     axes[1, 0].legend()
     
-    # NC3: Self-duality
-    # axes[1, 1].plot(epochs_id, nc3_id, 'b-o', linewidth=2, markersize=6, label='ID (CIFAR-100)')
-    # axes[1, 1].plot(epochs_ood, nc3_ood, 'r--s', linewidth=2, markersize=6, label='OOD (SVHN)')
-    # axes[1, 1].set_title("NC3: Mean Cosine Similarity", fontsize=12, fontweight='bold')
-    # axes[1, 1].set_xlabel("Epoch")
-    # axes[1, 1].set_ylabel("Cosine Similarity")
-    # axes[1, 1].set_ylim(0, 1.05)
-    # axes[1, 1].grid(True, alpha=0.3)
-    # axes[1, 1].legend()
     
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"Saved comparison plot to {save_path}")
     
-    # Print summary statistics
-    print("\n" + "="*80)
-    print("NEURAL COLLAPSE COMPARISON: ID vs OOD")
-    print("="*80)
-    
-    final_epoch_id = epochs_id[-1]
-    final_epoch_ood = epochs_ood[-1]
-    
-    print(f"\nFinal Epoch Comparison (Epoch {final_epoch_id}):")
-    print("-"*80)
-    print(f"{'Metric':<30} {'ID (CIFAR-100)':<20} {'OOD (SVHN)':<20}")
-    print("-"*80)
-    print(f"{'NC1: Within-class var':<30} {wt_var_id[-1]:<20.6f} {wt_var_ood[-1]:<20.6f}")
-    print(f"{'NC2: Mean distance':<30} {mean_dist_id[-1]:<20.4f} {mean_dist_ood[-1]:<20.4f}")
-    print(f"{'NC2: CV':<30} {cv_id[-1]:<20.4f} {cv_ood[-1]:<20.4f}")
-    print(f"{'NC3: Mean cosine sim':<30} {nc3_id[-1]:<20.4f} {nc3_ood[-1]:<20.4f}")
-    print("-"*80)
-    
-    print("\nInterpretation:")
-    print("- Higher NC1 (within-class var) for OOD → OOD features less collapsed")
-    print("- Different NC2 values → Different class separation patterns")
-    print("- Lower NC3 for OOD → Classifier weights less aligned with OOD means")
-    print("="*80 + "\n")
+def plot_nc2_nc3_multilayer(metrics_all, layer_names, save_path, title_prefix=""):
+    """
+    Plot NC2 (mean pairwise distance) and NC3 (mean cosine similarity)
+    for multiple layers on the same figure.
+
+    Args:
+        metrics_all: list of metrics dictionaries (one per layer)
+        layer_names: list of layer name strings (same length as metrics_all)
+        save_path: path to save figure
+        title_prefix: optional prefix for title
+    """
+
+    import matplotlib.pyplot as plt
+
+    assert len(metrics_all) == len(layer_names), \
+        "metrics_all and layer_names must have same length"
+
+    prefix = f"{title_prefix}: " if title_prefix else ""
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+    # NC2: Mean Pairwise Distance
+    for metrics, name in zip(metrics_all, layer_names):
+
+        epochs = metrics['epochs']
+        mean_dists = [metrics['nc2']['mean_dist'][e] for e in epochs]
+        stds = [metrics['nc2']['std_dist'][e] for e in epochs]
+
+        axes[0].plot(epochs, mean_dists, marker='o', label=name)
+
+        axes[0].fill_between(
+            epochs,
+            [m - s for m, s in zip(mean_dists, stds)],
+            [m + s for m, s in zip(mean_dists, stds)],
+            alpha=0.15
+        )
+
+    axes[0].set_title(f"{prefix}NC2: Mean Pairwise Distance", fontweight='bold')
+    axes[0].set_xlabel("Epoch")
+    axes[0].set_ylabel("Distance")
+    axes[0].grid(True, alpha=0.3)
+    axes[0].legend()
+
+    # NC3: Mean Cosine Similarity
+    for metrics, name in zip(metrics_all, layer_names):
+
+        epochs = metrics['epochs']
+        mean_cos = [metrics['nc3']['mean_cos'][e] for e in epochs]
+        std_cos = [metrics['nc3']['std_cos'][e] for e in epochs]
+
+        axes[1].plot(epochs, mean_cos, marker='o', label=name)
+
+        axes[1].fill_between(
+            epochs,
+            [m - s for m, s in zip(mean_cos, std_cos)],
+            [m + s for m, s in zip(mean_cos, std_cos)],
+            alpha=0.15
+        )
+
+    axes[1].set_title(f"{prefix}NC3: Self-Duality", fontweight='bold')
+    axes[1].set_xlabel("Epoch")
+    axes[1].set_ylabel("Cosine Similarity")
+    axes[1].set_ylim(0, 1.05)
+    axes[1].grid(True, alpha=0.3)
+    axes[1].legend()
+
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.close()
+
+    print(f"Saved multilayer NC2/NC3 plot to {save_path}")

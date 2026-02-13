@@ -69,3 +69,32 @@ def extract_features(model, dataloader, device):
     labels = torch.cat(labels_list)
     
     return features, labels
+
+def extract_layer_features(model, dataloader, device, return_layers):
+    """
+    Extract feature representations from a model for all data in the loader.
+    
+    Args:
+        model: PyTorch model with forward_features() method
+        dataloader: DataLoader containing the data
+        device: Device to run inference on
+        
+    Returns:
+        features: Tensor of shape (N, d) with feature vectors
+        labels: Tensor of shape (N,) with labels
+    """
+    model.eval()
+    features_list = []
+    labels_list = []
+    
+    with torch.no_grad():
+        for x, y in dataloader:
+            x = x.to(device)
+            z = model.forward_features_layerwise(x, return_layers = return_layers)
+            features_list.append(z.cpu())
+            labels_list.append(y)
+    
+    features = torch.cat(features_list)
+    labels = torch.cat(labels_list)
+    
+    return features, labels

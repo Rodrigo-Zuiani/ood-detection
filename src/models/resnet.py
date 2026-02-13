@@ -48,6 +48,48 @@ class ResNet18(nn.Module):
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 
+    def forward_features_layerwise(self, x, return_layers=None):
+        """
+        Extract features from multiple intermediate layers for layerwise NC analysis.
+        """
+        if return_layers is None:
+            return_layers = ['conv1', 'layer1', 'layer2', 'layer3', 'layer4']
+        
+        features_dict = {}
+        
+        # Initial convolution
+        out = F.relu(self.bn1(self.conv1(x)))  # (B, 64, 32, 32)
+        if 'conv1' in return_layers:
+            # Global average pooling to get (B, 64)
+            pooled = F.adaptive_avg_pool2d(out, (1, 1))
+            features_dict['conv1'] = torch.flatten(pooled, 1)
+        
+        # Layer 1
+        out = self.layer1(out)  # (B, 64, 32, 32)
+        if 'layer1' in return_layers:
+            pooled = F.adaptive_avg_pool2d(out, (1, 1))
+            features_dict['layer1'] = torch.flatten(pooled, 1)
+        
+        # Layer 2
+        out = self.layer2(out)  # (B, 128, 16, 16)
+        if 'layer2' in return_layers:
+            pooled = F.adaptive_avg_pool2d(out, (1, 1))
+            features_dict['layer2'] = torch.flatten(pooled, 1)
+        
+        # Layer 3
+        out = self.layer3(out)  # (B, 256, 8, 8)
+        if 'layer3' in return_layers:
+            pooled = F.adaptive_avg_pool2d(out, (1, 1))
+            features_dict['layer3'] = torch.flatten(pooled, 1)
+        
+        # Layer 4 (final)
+        out = self.layer4(out)  # (B, 512, 4, 4)
+        if 'layer4' in return_layers:
+            pooled = self.avgpool(out)
+            features_dict['layer4'] = torch.flatten(pooled, 1)
+        
+        return features_dict
+
     def forward_features(self, x): # Penultime features for NC analysis
         out = F.relu(self.bn1(self.conv1(x)))
         out = self.layer1(out)

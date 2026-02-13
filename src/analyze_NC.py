@@ -113,10 +113,6 @@ def main():
         nc1_results = compute_nc1_metrics(features, labels, class_means)
         nc1_results_OOD = compute_nc1_metrics(features_OOD, labels_OOD, class_means_OOD)
         
-        # print("\n  NC1 Metrics (ID / OOD):")
-        # print(f"    Within-class variance: {nc1_results['within_class_var']:.6f} / {nc1_results_OOD['within_class_var']:.6f}")
-        # print(f"    Within/Total ratio: {nc1_results['within_total_ratio']:.6f} / {nc1_results_OOD['within_total_ratio']:.6f}")
-        
         # Store ID metrics
         metrics['nc1']['within_class_var'][epoch] = nc1_results['within_class_var']
         metrics['nc1']['within_total_ratio'][epoch] = nc1_results['within_total_ratio']
@@ -131,11 +127,6 @@ def main():
         nc2_results = compute_nc2_metrics(class_means)
         nc2_results_OOD = compute_nc2_metrics(class_means_OOD)
         
-        # print("\n  NC2 Metrics (ID / OOD):")
-        # print(f"    Mean distance: {nc2_results['mean_dist']:.4f} / {nc2_results_OOD['mean_dist']:.4f}")
-        # print(f"    Std distance: {nc2_results['std_dist']:.4f} / {nc2_results_OOD['std_dist']:.4f}")
-        # print(f"    Coefficient of variation: {nc2_results['cv']:.4f} / {nc2_results_OOD['cv']:.4f}")
-        
         # Store ID metrics
         for key in ['mean_dist', 'std_dist', 'min_dist', 'max_dist', 'cv']:
             metrics['nc2'][key][epoch] = nc2_results[key]
@@ -148,20 +139,12 @@ def main():
         # NC3: Self-Duality
         # ========================================================
         nc3_results = compute_nc3_metrics(model, class_means)
-        # nc3_results_OOD = compute_nc3_metrics(model, class_means_OOD)
         
-        # print("\n  NC3 Metrics (ID / OOD):")
-        # print(f"    Mean cosine similarity: {nc3_results['mean_cos']:.4f} / {nc3_results_OOD['mean_cos']:.4f}")
-        # print(f"    Std cosine similarity: {nc3_results['std_cos']:.4f} / {nc3_results_OOD['std_cos']:.4f}")
-        # print(f"    Min cosine similarity: {nc3_results['min_cos']:.4f} / {nc3_results_OOD['min_cos']:.4f}")
         
         # Store ID metrics
         for key in ['mean_cos', 'std_cos', 'min_cos']:
             metrics['nc3'][key][epoch] = nc3_results[key]
         
-        # Store OOD metrics
-        # for key in ['mean_cos', 'std_cos', 'min_cos']:
-        #     metrics_OOD['nc3'][key][epoch] = nc3_results_OOD[key]
         
         print("=" * 80)
     
@@ -191,11 +174,6 @@ def main():
         title_prefix="OOD (SVHN)"
     )
     
-    # plot_nc3_metrics(
-    #     metrics_OOD,
-    #     save_path=os.path.join(config['plots_folder'], 'nc3_self_duality_OOD.png'),
-    #     title_prefix="OOD (SVHN)"
-    # )
     
     # Plot comparison (ID vs OOD)
     plot_nc_comparison(
