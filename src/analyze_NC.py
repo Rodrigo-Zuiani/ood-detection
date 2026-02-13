@@ -29,8 +29,8 @@ def main():
     setup_reproducibility(config['seed'])
     
     # Import here to avoid circular dependencies
-    from models.resnet import BasicBlock, ResNet18
-    from dataset.cifar100 import get_cifar100_loaders
+    from .models.resnet import BasicBlock, ResNet18
+    from .dataset.cifar100 import get_cifar100_loaders
     
     # Initialize model
     model = ResNet18(
