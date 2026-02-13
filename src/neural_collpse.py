@@ -259,7 +259,7 @@ def run_id_multilayer():
     plot_nc_multilayer(
         metrics_all=metrics_ID_all,
         layer_names =layer_names,
-        save_path=os.path.join(config['plots_folder'], 'nc2_nc3_multilayer.png'),
+        save_path=os.path.join(config['plots_folder'], 'nc_multilayer.png'),
         title_prefix="ID Cross Layer (CIFAR-100)"
 
     )
