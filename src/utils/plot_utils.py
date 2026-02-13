@@ -1,18 +1,20 @@
 """
 Visualization Functions
 Functions to create plots for NC1, NC2, and NC3 metrics
+Includes comparison plots for ID vs OOD data
 """
 
 import matplotlib.pyplot as plt
 
 
-def plot_nc1_nc2_metrics(metrics, save_path):
+def plot_nc1_nc2_metrics(metrics, save_path, title_prefix=""):
     """
     Create a 2x2 subplot showing NC1 and NC2 metrics over training.
     
     Args:
         metrics: Dictionary containing epochs and metric values
         save_path: Path to save the figure
+        title_prefix: Optional prefix for plot titles (e.g., "ID" or "OOD")
     """
     epochs = metrics['epochs']
     
@@ -27,9 +29,11 @@ def plot_nc1_nc2_metrics(metrics, save_path):
     # Create figure
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
     
+    prefix = f"{title_prefix}: " if title_prefix else ""
+    
     # NC1: Within-class variance
     axes[0, 0].plot(epochs, wt_var, 'b-o', linewidth=2, markersize=6)
-    axes[0, 0].set_title("NC1: Within-Class Variance", fontsize=12, fontweight='bold')
+    axes[0, 0].set_title(f"{prefix}NC1: Within-Class Variance", fontsize=12, fontweight='bold')
     axes[0, 0].set_xlabel("Epoch")
     axes[0, 0].set_ylabel("Within-Class Variance")
     axes[0, 0].set_yscale('log')
@@ -37,7 +41,7 @@ def plot_nc1_nc2_metrics(metrics, save_path):
     
     # NC2: Standard deviation of distances
     axes[0, 1].plot(epochs, stds, 'r-o', linewidth=2, markersize=6)
-    axes[0, 1].set_title("NC2: Std of Mean Distances", fontsize=12, fontweight='bold')
+    axes[0, 1].set_title(f"{prefix}NC2: Std of Mean Distances", fontsize=12, fontweight='bold')
     axes[0, 1].set_xlabel("Epoch")
     axes[0, 1].set_ylabel("Standard Deviation")
     axes[0, 1].grid(True, alpha=0.3)
@@ -59,7 +63,7 @@ def plot_nc1_nc2_metrics(metrics, save_path):
     
     # NC2: Coefficient of variation
     axes[1, 1].plot(epochs, cv, 'm-o', linewidth=2, markersize=6)
-    axes[1, 1].set_title("NC2: Coefficient of Variation", fontsize=12, fontweight='bold')
+    axes[1, 1].set_title(f"{prefix}NC2: Coefficient of Variation", fontsize=12, fontweight='bold')
     axes[1, 1].set_xlabel("Epoch")
     axes[1, 1].set_ylabel("CV (Std/Mean)")
     axes[1, 1].grid(True, alpha=0.3)
@@ -70,19 +74,22 @@ def plot_nc1_nc2_metrics(metrics, save_path):
     print(f"Saved NC1/NC2 plot to {save_path}")
 
 
-def plot_nc3_metrics(metrics, save_path):
+def plot_nc3_metrics(metrics, save_path, title_prefix=""):
     """
     Create a plot showing NC3 (self-duality) metrics over training.
     
     Args:
         metrics: Dictionary containing epochs and metric values
         save_path: Path to save the figure
+        title_prefix: Optional prefix for plot title (e.g., "ID" or "OOD")
     """
     epochs = metrics['epochs']
     
     # Extract metric lists in epoch order
     nc3_means = [metrics['nc3']['mean_cos'][e] for e in epochs]
     nc3_stds = [metrics['nc3']['std_cos'][e] for e in epochs]
+    
+    prefix = f"{title_prefix}: " if title_prefix else ""
     
     # Create figure
     plt.figure(figsize=(8, 6))
@@ -95,7 +102,7 @@ def plot_nc3_metrics(metrics, save_path):
         label="±1 Std Dev"
     )
     plt.ylim(0, 1.05)
-    plt.title("NC3: Self-Duality (Weight || Mean)", fontsize=14, fontweight='bold')
+    plt.title(f"{prefix}NC3: Self-Duality (Weight || Mean)", fontsize=14, fontweight='bold')
     plt.xlabel("Epoch", fontsize=12)
     plt.ylabel("Cosine Similarity", fontsize=12)
     plt.grid(True, alpha=0.3)
@@ -104,6 +111,7 @@ def plot_nc3_metrics(metrics, save_path):
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"Saved NC3 plot to {save_path}")
+
 
 def plot_nc_comparison(metrics_id, metrics_ood, save_path):
     """
@@ -190,11 +198,11 @@ def plot_nc_comparison(metrics_id, metrics_ood, save_path):
     print(f"{'NC1: Within-class var':<30} {wt_var_id[-1]:<20.6f} {wt_var_ood[-1]:<20.6f}")
     print(f"{'NC2: Mean distance':<30} {mean_dist_id[-1]:<20.4f} {mean_dist_ood[-1]:<20.4f}")
     print(f"{'NC2: CV':<30} {cv_id[-1]:<20.4f} {cv_ood[-1]:<20.4f}")
-    # print(f"{'NC3: Mean cosine sim':<30} {nc3_id[-1]:<20.4f} {nc3_ood[-1]:<20.4f}")
+    print(f"{'NC3: Mean cosine sim':<30} {nc3_id[-1]:<20.4f} {nc3_ood[-1]:<20.4f}")
     print("-"*80)
     
     print("\nInterpretation:")
     print("- Higher NC1 (within-class var) for OOD → OOD features less collapsed")
     print("- Different NC2 values → Different class separation patterns")
-    # print("- Lower NC3 for OOD → Classifier weights less aligned with OOD means")
+    print("- Lower NC3 for OOD → Classifier weights less aligned with OOD means")
     print("="*80 + "\n")
