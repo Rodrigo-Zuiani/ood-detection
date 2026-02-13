@@ -92,7 +92,6 @@ def plot_nc3_metrics(metrics, save_path):
         [m - s for m, s in zip(nc3_means, nc3_stds)],
         [m + s for m, s in zip(nc3_means, nc3_stds)],
         alpha=0.3,
-        color='gray',
         label="±1 Std Dev"
     )
     plt.ylim(0, 1.05)
