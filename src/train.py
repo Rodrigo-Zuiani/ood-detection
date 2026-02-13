@@ -44,7 +44,7 @@ lr = 0.1
 weight_decay = 5e-4
 optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=weight_decay)
 
-num_epochs = 350
+num_epochs = 450
 
 # scheduler = optim.lr_scheduler.CosineAnnealingLR(
 #     optimizer,
@@ -57,22 +57,21 @@ scheduler = torch.optim.lr_scheduler.MultiStepLR(
     gamma=0.1
 )
 
-# resume_path = "checkpoints/resnet18_cifar100_epoch_350.pt"
-start_epoch = 0
+resume_path = "checkpoints/resnet18_cifar100_epoch_350.pt"
+start_epoch = 350
 
-# if os.path.exists(resume_path):
-#     checkpoint = torch.load(resume_path, map_location=device)
-#     model.load_state_dict(checkpoint["model_state"])
-#     optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-#     start_epoch = checkpoint["epoch"]
+if os.path.exists(resume_path):
+    checkpoint = torch.load(resume_path, map_location=device)
+    model.load_state_dict(checkpoint["model_state"])
+    optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+    start_epoch = checkpoint["epoch"]
 
-#     scheduler = optim.lr_scheduler.CosineAnnealingLR(
-#         optimizer,
-#         T_max=num_epochs,
-#         last_epoch=start_epoch-1
-#     )
-
-#     print(f"Resuming from epoch {start_epoch}")
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(
+        optimizer,
+        milestones=[117, 233],  # 1/3 and 2/3 of 350
+        gamma=0.1
+    )
+    print(f"Resuming from epoch {start_epoch}")
 
 
 
