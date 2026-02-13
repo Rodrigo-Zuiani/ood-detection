@@ -43,14 +43,18 @@ criterion = nn.CrossEntropyLoss()
 lr = 0.1
 weight_decay = 5e-4
 optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=weight_decay)
-# scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
 
-# num_epochs = 350
-num_epochs = 800
+num_epochs = 350
 
-scheduler = optim.lr_scheduler.CosineAnnealingLR(
+# scheduler = optim.lr_scheduler.CosineAnnealingLR(
+#     optimizer,
+#     T_max=num_epochs
+# )
+
+scheduler = torch.optim.lr_scheduler.MultiStepLR(
     optimizer,
-    T_max=num_epochs
+    milestones=[117, 233],  # 1/3 and 2/3 of 350
+    gamma=0.1
 )
 
 # resume_path = "checkpoints/resnet18_cifar100_epoch_350.pt"
