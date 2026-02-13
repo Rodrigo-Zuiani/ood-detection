@@ -57,7 +57,7 @@ scheduler = torch.optim.lr_scheduler.MultiStepLR(
     gamma=0.1
 )
 
-resume_path = "checkpoints/resnet18_cifar100_epoch_350.pt"
+resume_path = "src/checkpoints/resnet18_cifar100_epoch_350.pt"
 start_epoch = 350
 
 if os.path.exists(resume_path):
@@ -80,12 +80,12 @@ train_losses, train_acc_list, test_acc_list = [], [], []
 # Make sure folders exist
 os.makedirs("checkpoints", exist_ok=True)
 os.makedirs("logs", exist_ok=True)
-log_csv_path = "logs/train_log.csv"
+log_csv_path = "src/logs/train_log.csv"
 logging.basicConfig(
     level=logging.INFO,  # INFO, DEBUG, WARNING, ERROR
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
-        logging.FileHandler("logs/logging.txt"),
+        logging.FileHandler("src/logs/logging.txt"),
         logging.StreamHandler()  # prints to console
     ]
 )
@@ -152,11 +152,11 @@ for epoch in range(start_epoch, num_epochs):
                 "seed": seed
             }
         }
-        checkpoint_path = f"checkpoints/resnet18_cifar100_epoch_{epoch+1:03d}.pt"
+        checkpoint_path = f"src.checkpoints/resnet18_cifar100_epoch_{epoch+1:03d}.pt"
         torch.save(checkpoint, checkpoint_path)
         logging.info(f"Checkpoint saved: {checkpoint_path}")
 
-model_path = "checkpoints/resnet18_cifar100.pth"
+model_path = "src/checkpoints/resnet18_cifar100.pth"
 torch.save({
     "epoch": num_epochs,
     "model_state_dict": model.state_dict(),
@@ -181,7 +181,7 @@ plt.ylabel('Accuracy (%)')
 plt.title('Accuracy')
 plt.legend()
 
-plot_path = "plots/resnet18_cifar100_training_NC.png"
+plot_path = "src/plots/resnet18_cifar100_training_NC.png"
 plt.tight_layout()
 plt.savefig(plot_path, dpi=300)
 plt.close()

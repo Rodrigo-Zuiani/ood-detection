@@ -1,10 +1,15 @@
 import torch
+import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from .models.resnet import BasicBlock, ResNet18
 from .dataset.cifar100 import get_cifar100_loaders
 import random
 import numpy as np
 import os 
+
+# ============================================================
+# Setup
+# ============================================================
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = ResNet18(block=BasicBlock, num_blocks=[2, 2, 2, 2], num_classes=100).to(device)
@@ -26,20 +31,21 @@ def worker_init_fn(worker_id):
     random.seed(worker_seed)
     torch.manual_seed(worker_seed)
 
-
 trainloader, testloader, classes = get_cifar100_loaders(
     batch_size=128,
     num_workers=2,
     generator=g,
     worker_init_fn=worker_init_fn)
 
-
-epochs = []
 checkpoint_folder = "src/checkpoints"
 cp_file_names = os.listdir(checkpoint_folder)
 
 print(f"Found {len(cp_file_names)} checkpoint files")
 print("="*80)
+
+# ============================================================
+# Storage dictionaries
+# ============================================================
 
 distance_means_dict = {}
 std_means_dict = {}
@@ -48,12 +54,26 @@ mean_distances_dict = {}
 min_distances_dict = {}
 max_distances_dict = {}
 
+# NC3
+nc3_mean_dict = {}
+nc3_std_dict = {}
+nc3_min_dict = {}
+
+epochs = []
+
+# ============================================================
+# Loop over checkpoints
+# ============================================================
+
 for cp_file in cp_file_names:
+
     checkpoint_file = os.path.join(checkpoint_folder, cp_file)
     checkpoint = torch.load(checkpoint_file, weights_only=True)
     model.load_state_dict(checkpoint['model_state'])
+
     epoch = checkpoint["epoch"]
     epochs.append(epoch)
+
     model.eval()
     features_list = []
     labels_list = []
@@ -61,174 +81,176 @@ for cp_file in cp_file_names:
     with torch.no_grad():
         for x, y in trainloader:
             x = x.to(device)
-            z = model.forward_features(x)  # penultimate features before FC
+            z = model.forward_features(x)
             features_list.append(z.cpu())
             labels_list.append(y)
 
-    features = torch.cat(features_list)  # [N, d] [50000, 512] for cifar-100
-    labels = torch.cat(labels_list)      # [N] ([50000])
+    features = torch.cat(features_list)
+    labels = torch.cat(labels_list)
 
     print(f"\nEpoch {epoch}:")
     print(f"  Features shape: {features.shape}")
     print(f"  Labels shape: {labels.shape}")
 
-    # Class Means Distances (NC2) --> Simplex ETF Structure
+    # ========================================================
+    # Compute class means
+    # ========================================================
+
     num_classes = labels.max().item() + 1
     d = features.size(1)
 
-    class_means = torch.zeros(num_classes, d) # [100, 512]  
+    class_means = torch.zeros(num_classes, d)
 
-    for c in range(num_classes):
-        idx = labels == c               # boolean mask : True where labels is class C, otherwise False
-        if idx.sum() == 0:
-            continue
-        class_means[c] = features[idx].mean(dim=0)
-
-    # NC2: Analyze class mean distances
-    global_class_mean = class_means.mean(dim=0, keepdim=True)
-    class_means_centered = class_means - global_class_mean
-    dist_matrix = torch.cdist(class_means_centered, class_means_centered, p=2) # Class mean distance for 1 epoch [C, C]
-    pairwise_distances = dist_matrix[torch.triu(torch.ones_like(dist_matrix), diagonal=1).bool()] # Upper triangle
-    
-    mean_dist = pairwise_distances.mean()
-    std_dist = pairwise_distances.std()
-    min_dist = pairwise_distances.min()
-    max_dist = pairwise_distances.max()
-    cv_dist = std_dist / mean_dist  # Coefficient of variation
-    
-    print(f"\n  NC2 Metrics (Class Mean Distances):")
-    print(f"    Mean pairwise distance: {mean_dist:.4f}")
-    print(f"    Std of distances: {std_dist:.4f}")
-    print(f"    Min distance: {min_dist:.4f}")
-    print(f"    Max distance: {max_dist:.4f}")
-    print(f"    Coefficient of variation: {cv_dist:.4f}")
-    print(f"    Range (max-min): {(max_dist - min_dist):.4f}")
-    
-    # Within class variance (NC1) --> Variability Collapse
-    # within_class_var = 0.0
-    Sw = torch.zeros(d, d) 
     for c in range(num_classes):
         idx = labels == c
         if idx.sum() == 0:
             continue
-        z_c = features[idx]                 # [N_c, d] all samples with d features
-        mu_c = class_means[c]               # [d] the mean for every d feature
-        
-        # Compute sum of squared deviations for this class
+        class_means[c] = features[idx].mean(dim=0)
+
+    global_class_mean = class_means.mean(dim=0, keepdim=True)
+    class_means_centered = class_means - global_class_mean
+
+    # ========================================================
+    # NC2: Class mean distances
+    # ========================================================
+
+    dist_matrix = torch.cdist(class_means_centered, class_means_centered, p=2)
+    pairwise_distances = dist_matrix[torch.triu(torch.ones_like(dist_matrix), diagonal=1).bool()]
+
+    mean_dist = pairwise_distances.mean()
+    std_dist = pairwise_distances.std()
+    min_dist = pairwise_distances.min()
+    max_dist = pairwise_distances.max()
+    cv_dist = std_dist / mean_dist
+
+    print("\n  NC2 Metrics:")
+    print(f"    Mean distance: {mean_dist:.4f}")
+    print(f"    Std distance: {std_dist:.4f}")
+    print(f"    Coefficient of variation: {cv_dist:.4f}")
+
+    # ========================================================
+    # NC1: Within-class variance
+    # ========================================================
+
+    Sw = torch.zeros(d, d)
+
+    for c in range(num_classes):
+        idx = labels == c
+        if idx.sum() == 0:
+            continue
+        z_c = features[idx]
+        mu_c = class_means[c]
         centered = z_c - mu_c
-        Sw += (centered.T @ centered)
-    
-    # Normalize by total number of samples AND feature dimension
-    # within_class_var /= (features.size(0) * d)
+        Sw += centered.T @ centered
+
     within_class_var = torch.trace(Sw) / (features.size(0) * d)
-    print(f"\n  NC1 Metrics (Within-Class Variance):")
-    print(f"    Within-class variance (per dim per sample): {within_class_var:.6f}")
-    
-    # Additional diagnostic: compute global mean
+
     global_mean = features.mean(dim=0)
     total_var = ((features - global_mean)**2).sum() / (features.size(0) * d)
     between_class_var = total_var - within_class_var
-    
-    print(f"    Total variance: {total_var:.6f}")
-    print(f"    Between-class variance: {between_class_var:.6f}")
+
+    print("\n  NC1 Metrics:")
+    print(f"    Within-class variance: {within_class_var:.6f}")
     print(f"    Within/Total ratio: {(within_class_var / total_var):.6f}")
-    
+
+    # ========================================================
+    # NC3: Self-Duality (Weight || Mean)
+    # ========================================================
+
+    W = model.linear.weight.detach().cpu()
+    mu = class_means_centered
+
+    W_norm = F.normalize(W, dim=1)
+    mu_norm = F.normalize(mu, dim=1)
+
+    cos_sim = torch.sum(W_norm * mu_norm, dim=1)
+
+    mean_cos = cos_sim.mean()
+    std_cos = cos_sim.std()
+    min_cos = cos_sim.min()
+
+    print("\n  NC3 Metrics:")
+    print(f"    Mean cosine similarity: {mean_cos:.4f}")
+    print(f"    Std cosine similarity: {std_cos:.4f}")
+    print(f"    Min cosine similarity: {min_cos:.4f}")
+
     print("="*80)
-    
+
+    # Store
     wt_class_var[epoch] = within_class_var.item()
-    distance_means_dict[epoch] = pairwise_distances
     std_means_dict[epoch] = std_dist.item()
     mean_distances_dict[epoch] = mean_dist.item()
     min_distances_dict[epoch] = min_dist.item()
     max_distances_dict[epoch] = max_dist.item()
 
-# Sort everything by epoch
-ordered_std = {k:v for k,v in sorted(std_means_dict.items(), key=lambda item:item[0])}
-ordered_pairwise = {k:v for k,v in sorted(distance_means_dict.items(), key=lambda item:item[0])}
-ordered_var = {k:v for k,v in sorted(wt_class_var.items(), key=lambda item:item[0])}
-ordered_mean_dist = {k:v for k,v in sorted(mean_distances_dict.items(), key=lambda item:item[0])}
-ordered_min_dist = {k:v for k,v in sorted(min_distances_dict.items(), key=lambda item:item[0])}
-ordered_max_dist = {k:v for k,v in sorted(max_distances_dict.items(), key=lambda item:item[0])}
+    nc3_mean_dict[epoch] = mean_cos.item()
+    nc3_std_dict[epoch] = std_cos.item()
+    nc3_min_dict[epoch] = min_cos.item()
 
-stds = list(ordered_std.values())
-wt_var = list(ordered_var.values())
-pairs = list(ordered_pairwise.values())
-mean_dists = list(ordered_mean_dist.values())
-min_dists = list(ordered_min_dist.values())
-max_dists = list(ordered_max_dist.values())
+# ============================================================
+# Sort by epoch
+# ============================================================
+
 epochs.sort()
 
-# Plot 1: NC1 and NC2 metrics over time
+wt_var = [wt_class_var[e] for e in epochs]
+stds = [std_means_dict[e] for e in epochs]
+mean_dists = [mean_distances_dict[e] for e in epochs]
+min_dists = [min_distances_dict[e] for e in epochs]
+max_dists = [max_distances_dict[e] for e in epochs]
+
+nc3_means = [nc3_mean_dict[e] for e in epochs]
+nc3_stds = [nc3_std_dict[e] for e in epochs]
+
+# ============================================================
+# Plot NC1 & NC2
+# ============================================================
+
 fig, axes = plt.subplots(2, 2, figsize=(14, 10))
 
-# NC1: Within-class variance
-axes[0, 0].plot(epochs, wt_var, 'b-', linewidth=2, marker='o')
-axes[0, 0].set_xlabel("Epoch", fontsize=12)
-axes[0, 0].set_ylabel("Within-class variance", fontsize=12)
-axes[0, 0].set_title("NC1: Within-Class Variability Collapse", fontsize=14, fontweight='bold')
-axes[0, 0].grid(True, alpha=0.3)
-axes[0, 0].set_yscale('log')  # Log scale often better for variance
+axes[0, 0].plot(epochs, wt_var, 'b-o')
+axes[0, 0].set_title("NC1: Within-Class Variance")
+axes[0, 0].set_yscale('log')
+axes[0, 0].grid(True)
 
-# NC2: Std of distances (should go to 0)
-axes[0, 1].plot(epochs, stds, 'r-', linewidth=2, marker='o')
-axes[0, 1].set_xlabel("Epoch", fontsize=12)
-axes[0, 1].set_ylabel("Std of pairwise distances", fontsize=12)
-axes[0, 1].set_title("NC2: Distance Uniformity (should → 0)", fontsize=14, fontweight='bold')
-axes[0, 1].grid(True, alpha=0.3)
+axes[0, 1].plot(epochs, stds, 'r-o')
+axes[0, 1].set_title("NC2: Std of Mean Distances")
+axes[0, 1].grid(True)
 
-# NC2: Mean distance (should stabilize)
-axes[1, 0].plot(epochs, mean_dists, 'g-', linewidth=2, marker='o', label='Mean')
-axes[1, 0].fill_between(epochs, min_dists, max_dists, alpha=0.3, label='Min-Max range')
-axes[1, 0].set_xlabel("Epoch", fontsize=12)
-axes[1, 0].set_ylabel("Distance", fontsize=12)
-axes[1, 0].set_title("NC2: Mean Pairwise Distance", fontsize=14, fontweight='bold')
-axes[1, 0].legend()
-axes[1, 0].grid(True, alpha=0.3)
+axes[1, 0].plot(epochs, mean_dists, 'g-o')
+axes[1, 0].fill_between(epochs, min_dists, max_dists, alpha=0.3)
+axes[1, 0].set_title("NC2: Mean Pairwise Distance")
+axes[1, 0].grid(True)
 
-# Coefficient of variation
 cv = [s/m for s, m in zip(stds, mean_dists)]
-axes[1, 1].plot(epochs, cv, 'm-', linewidth=2, marker='o')
-axes[1, 1].set_xlabel("Epoch", fontsize=12)
-axes[1, 1].set_ylabel("Coefficient of Variation", fontsize=12)
-axes[1, 1].set_title("NC2: CV = Std/Mean (should → 0)", fontsize=14, fontweight='bold')
-axes[1, 1].grid(True, alpha=0.3)
+axes[1, 1].plot(epochs, cv, 'm-o')
+axes[1, 1].set_title("NC2: Coefficient of Variation")
+axes[1, 1].grid(True)
 
 plt.tight_layout()
-plot_path = "src/plots/nc_metrics.png"
-plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+plt.savefig("src/plots/nc_metrics.png", dpi=300)
 plt.close()
-print(f"\nSaved NC metrics plot to {plot_path}")
 
-# Plot 2: Distribution of pairwise distances (boxplot)
-data = [d.cpu().numpy() for d in pairs]
+# ============================================================
+# Plot NC3
+# ============================================================
 
-plt.figure(figsize=(12, 6))
-plt.boxplot(data, positions=epochs, showfliers=False, widths=5)
-plt.xlabel("Epoch", fontsize=12)
-plt.ylabel("Pairwise class mean distance", fontsize=12)
-plt.title("Distribution of Class Mean Distances Over Training", fontsize=14, fontweight='bold')
-plt.grid(True, alpha=0.3, axis='y')
+plt.figure(figsize=(8, 6))
+plt.plot(epochs, nc3_means, 'k-o', label="Mean Cosine")
+plt.fill_between(
+    epochs,
+    [m - s for m, s in zip(nc3_means, nc3_stds)],
+    [m + s for m, s in zip(nc3_means, nc3_stds)],
+    alpha=0.3
+)
+plt.ylim(0, 1.05)
+plt.title("NC3: Self-Duality (Weight || Mean)")
+plt.xlabel("Epoch")
+plt.ylabel("Cosine Similarity")
+plt.grid(True)
+plt.legend()
 plt.tight_layout()
-
-plot_path = "src/plots/simplex_boxplot.png"
-plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+plt.savefig("src/plots/nc3_self_duality.png", dpi=300)
 plt.close()
-print(f"Saved boxplot to {plot_path}")
 
-# Summary statistics
-print("\n" + "="*80)
-print("SUMMARY:")
-print("="*80)
-print(f"Epochs analyzed: {min(epochs)} to {max(epochs)}")
-print(f"\nNC1 (Within-class variance):")
-print(f"  Initial (epoch {min(epochs)}): {wt_var[0]:.6f}")
-print(f"  Final (epoch {max(epochs)}): {wt_var[-1]:.6f}")
-print(f"  Reduction: {(1 - wt_var[-1]/wt_var[0])*100:.2f}%")
-print(f"\nNC2 (Distance std):")
-print(f"  Initial (epoch {min(epochs)}): {stds[0]:.4f}")
-print(f"  Final (epoch {max(epochs)}): {stds[-1]:.4f}")
-print(f"  Reduction: {(1 - stds[-1]/stds[0])*100:.2f}%")
-print(f"\nNC2 (Coefficient of variation):")
-print(f"  Initial (epoch {min(epochs)}): {cv[0]:.4f}")
-print(f"  Final (epoch {max(epochs)}): {cv[-1]:.4f}")
-print("="*80)
+print("\nAnalysis complete. Plots saved.")
