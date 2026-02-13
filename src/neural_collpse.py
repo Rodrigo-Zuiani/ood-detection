@@ -241,7 +241,7 @@ def run_id_ood():
 # ============================================================
 
 def run_id_multilayer():
-    print("\nRunning ID + OOD Neural Collapse Analysis\n")
+    print("\nRunning ID multilayer Neural Collapse Analysis\n")
 
     config, device = setup_environment()
     model = initialize_model(device)

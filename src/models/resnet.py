@@ -63,6 +63,7 @@ class ResNet18(nn.Module):
             # Global average pooling to get (B, 64)
             pooled = F.adaptive_avg_pool2d(out, (1, 1))
             features_dict['conv1'] = torch.flatten(pooled, 1)
+            
         
         # Layer 1
         out = self.layer1(out)  # (B, 64, 32, 32)
@@ -88,7 +89,8 @@ class ResNet18(nn.Module):
             pooled = self.avgpool(out)
             features_dict['layer4'] = torch.flatten(pooled, 1)
         
-        return features_dict
+        final_out = torch.flatten(pooled, 1)
+        return final_out
 
     def forward_features(self, x): # Penultime features for NC analysis
         out = F.relu(self.bn1(self.conv1(x)))
