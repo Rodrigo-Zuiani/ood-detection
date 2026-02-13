@@ -216,31 +216,9 @@ def plot_nc2_nc3_multilayer(metrics_all, layer_names, save_path, title_prefix=""
     axes[0].grid(True, alpha=0.3)
     axes[0].legend()
 
-    # NC3: Mean Cosine Similarity
-    for metrics, name in zip(metrics_all, layer_names):
-
-        epochs = metrics['epochs']
-        mean_cos = [metrics['nc3']['mean_cos'][e] for e in epochs]
-        std_cos = [metrics['nc3']['std_cos'][e] for e in epochs]
-
-        axes[1].plot(epochs, mean_cos, marker='o', label=name)
-
-        axes[1].fill_between(
-            epochs,
-            [m - s for m, s in zip(mean_cos, std_cos)],
-            [m + s for m, s in zip(mean_cos, std_cos)],
-            alpha=0.15
-        )
-
-    axes[1].set_title(f"{prefix}NC3: Self-Duality", fontweight='bold')
-    axes[1].set_xlabel("Epoch")
-    axes[1].set_ylabel("Cosine Similarity")
-    axes[1].set_ylim(0, 1.05)
-    axes[1].grid(True, alpha=0.3)
-    axes[1].legend()
-
+ 
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
 
-    print(f"Saved multilayer NC2/NC3 plot to {save_path}")
+    print(f"Saved multilayer NC2 plot to {save_path}")

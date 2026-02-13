@@ -152,9 +152,10 @@ def process_checkpoints(model, loader, device, config, return_layers = None):
             metrics['nc2'][key][epoch] = nc2[key]
 
         # NC3
-        nc3 = compute_nc3_metrics(model, class_means)
-        for key in ['mean_cos', 'std_cos', 'min_cos']:
-            metrics['nc3'][key][epoch] = nc3[key]
+        if not return_layers:
+            nc3 = compute_nc3_metrics(model, class_means)
+            for key in ['mean_cos', 'std_cos', 'min_cos']:
+                metrics['nc3'][key][epoch] = nc3[key]
 
         print("=" * 80)
 
