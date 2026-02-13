@@ -218,7 +218,13 @@ axes[0, 1].set_title("NC2: Std of Mean Distances")
 axes[0, 1].grid(True)
 
 axes[1, 0].plot(epochs, mean_dists, 'g-o')
-axes[1, 0].fill_between(epochs, min_dists, max_dists, alpha=0.3)
+axes[1, 0].fill_between(
+    epochs,
+    [m - s for m, s in zip(mean_dists, stds)],
+    [m + s for m, s in zip(mean_dists, stds)],
+    alpha=0.3,
+    label='±1 std'
+)
 axes[1, 0].set_title("NC2: Mean Pairwise Distance")
 axes[1, 0].grid(True)
 
