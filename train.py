@@ -57,21 +57,7 @@ scheduler = torch.optim.lr_scheduler.MultiStepLR(
     gamma=0.1
 )
 
-resume_path = "src/checkpoints/resnet18_cifar100_epoch_350.pt"
-start_epoch = 350
-
-if os.path.exists(resume_path):
-    checkpoint = torch.load(resume_path, map_location=device)
-    model.load_state_dict(checkpoint["model_state"])
-    optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-    start_epoch = checkpoint["epoch"]
-
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(
-        optimizer,
-        milestones=[117, 233],  # 1/3 and 2/3 of 350
-        gamma=0.1
-    )
-    print(f"Resuming from epoch {start_epoch}")
+start_epoch = 0
 
 
 
