@@ -3,6 +3,8 @@ __pycache__/
 *.pth
 *.pt
 *.png
-!src/checkpoints/checkpoints/resnet18_cifar100_epoch_450.pt
-!src/checkpoints/checkpoints/resnet18_cifar100_epoch_350.pt
-!src/checkpoints/checkpoints/resnet18_cifar100_epoch_100.pt
+!src/checkpoints/resnet18_cifar100_epoch_450.pt
+!src/checkpoints/resnet18_cifar100_epoch_350.pt
+!src/checkpoints/resnet18_cifar100_epoch_100.pt
+logs/
+data/
