@@ -60,7 +60,7 @@ def main():
     feature_id_val, _ = extract_features(model, cifar100_testloader, DEVICE)
     
     print("Extracting features from OOD dataset (SVHN)...")
-    ood_loader = get_svhn_ood_loader(batch_size=BATCH_SIZE, num_workers=NUM_WORKERS)
+    ood_loader, _ = get_svhn_ood_loader(batch_size=BATCH_SIZE, num_workers=NUM_WORKERS)
     feature_ood, _ = extract_features(model, ood_loader, DEVICE)
     
     print(f'Feature shapes: train={feature_id_train.shape}, val={feature_id_val.shape}, ood={feature_ood.shape}')
