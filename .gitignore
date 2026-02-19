@@ -2,7 +2,6 @@ __pycache__/
 .venv/
 *.pth
 *.pt
-*.png
 !src/checkpoints/resnet18_cifar100_epoch_450.pt
 !src/checkpoints/resnet18_cifar100_epoch_350.pt
 !src/checkpoints/resnet18_cifar100_epoch_100.pt
