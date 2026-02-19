@@ -10,7 +10,7 @@ import OODmethods as ood_methods
 
 
 # Configuration
-CHECKPOINT = "checkpoints/resnet18_cifar100.pth"
+CHECKPOINT = "checkpoints/resnet18_cifar100_epoch_450.pt"
 BATCH_SIZE = 128
 NUM_WORKERS = 2
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -46,8 +46,10 @@ def main():
     print("Loading model...")
     model = ResNet18(block=BasicBlock, num_blocks=[2, 2, 2, 2], num_classes=NUM_CLASSES)
     checkpoint = torch.load(CHECKPOINT)
-    if 'net' in checkpoint:
-        model.load_state_dict(checkpoint['net'], strict=False)
+    if 'model_state' in checkpoint:
+        model.load_state_dict(checkpoint['model_state'], strict=False)
+    elif 'model_state_dict' in checkpoint:
+        model.load_state_dict(checkpoint['model_state_dict'], strict=False)
     else:
         model.load_state_dict(checkpoint, strict=False)
     model.to(DEVICE)
