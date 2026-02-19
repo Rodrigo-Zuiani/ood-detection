@@ -129,50 +129,48 @@ def plot_nc_comparison(metrics_id, metrics_ood, save_path):
     wt_var_id = [metrics_id['nc1']['within_class_var'][e] for e in epochs_id]
     mean_dist_id = [metrics_id['nc2']['mean_dist'][e] for e in epochs_id]
     cv_id = [metrics_id['nc2']['cv'][e] for e in epochs_id]
-    nc3_id = [metrics_id['nc3']['mean_cos'][e] for e in epochs_id]
     
     # Extract OOD metrics
     wt_var_ood = [metrics_ood['nc1']['within_class_var'][e] for e in epochs_ood]
     mean_dist_ood = [metrics_ood['nc2']['mean_dist'][e] for e in epochs_ood]
     cv_ood = [metrics_ood['nc2']['cv'][e] for e in epochs_ood]
     
-    # Create figure with 2x2 subplots
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+    # Create figure with 1x3 subplots
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
     
     # NC1: Within-class variance
-    axes[0, 0].plot(epochs_id, wt_var_id, 'b-o', linewidth=2, markersize=6, label='ID (CIFAR-100)')
-    axes[0, 0].plot(epochs_ood, wt_var_ood, 'r--s', linewidth=2, markersize=6, label='OOD (SVHN)')
-    axes[0, 0].set_title("NC1: Within-Class Variance", fontsize=12, fontweight='bold')
-    axes[0, 0].set_xlabel("Epoch")
-    axes[0, 0].set_ylabel("Within-Class Variance")
-    axes[0, 0].set_yscale('log')
-    axes[0, 0].grid(True, alpha=0.3)
-    axes[0, 0].legend()
+    axes[0].plot(epochs_id, wt_var_id, 'b-o', linewidth=2, markersize=6, label='ID (CIFAR-100)')
+    axes[0].plot(epochs_ood, wt_var_ood, 'r--s', linewidth=2, markersize=6, label='OOD (SVHN)')
+    axes[0].set_title("NC1: Within-Class Variance", fontsize=12, fontweight='bold')
+    axes[0].set_xlabel("Epoch")
+    axes[0].set_ylabel("Within-Class Variance")
+    axes[0].set_yscale('log')
+    axes[0].grid(True, alpha=0.3)
+    axes[0].legend()
     
     # NC2: Mean pairwise distance
-    axes[0, 1].plot(epochs_id, mean_dist_id, 'b-o', linewidth=2, markersize=6, label='ID (CIFAR-100)')
-    axes[0, 1].plot(epochs_ood, mean_dist_ood, 'r--s', linewidth=2, markersize=6, label='OOD (SVHN)')
-    axes[0, 1].set_title("NC2: Mean Pairwise Distance", fontsize=12, fontweight='bold')
-    axes[0, 1].set_xlabel("Epoch")
-    axes[0, 1].set_ylabel("Distance")
-    axes[0, 1].grid(True, alpha=0.3)
-    axes[0, 1].legend()
+    axes[1].plot(epochs_id, mean_dist_id, 'b-o', linewidth=2, markersize=6, label='ID (CIFAR-100)')
+    axes[1].plot(epochs_ood, mean_dist_ood, 'r--s', linewidth=2, markersize=6, label='OOD (SVHN)')
+    axes[1].set_title("NC2: Mean Pairwise Distance", fontsize=12, fontweight='bold')
+    axes[1].set_xlabel("Epoch")
+    axes[1].set_ylabel("Distance")
+    axes[1].grid(True, alpha=0.3)
+    axes[1].legend()
     
     # NC2: Coefficient of variation
-    axes[1, 0].plot(epochs_id, cv_id, 'b-o', linewidth=2, markersize=6, label='ID (CIFAR-100)')
-    axes[1, 0].plot(epochs_ood, cv_ood, 'r--s', linewidth=2, markersize=6, label='OOD (SVHN)')
-    axes[1, 0].set_title("NC2: Coefficient of Variation", fontsize=12, fontweight='bold')
-    axes[1, 0].set_xlabel("Epoch")
-    axes[1, 0].set_ylabel("CV (Std/Mean)")
-    axes[1, 0].grid(True, alpha=0.3)
-    axes[1, 0].legend()
-    
+    axes[2].plot(epochs_id, cv_id, 'b-o', linewidth=2, markersize=6, label='ID (CIFAR-100)')
+    axes[2].plot(epochs_ood, cv_ood, 'r--s', linewidth=2, markersize=6, label='OOD (SVHN)')
+    axes[2].set_title("NC2: Coefficient of Variation", fontsize=12, fontweight='bold')
+    axes[2].set_xlabel("Epoch")
+    axes[2].set_ylabel("CV (Std/Mean)")
+    axes[2].grid(True, alpha=0.3)
+    axes[2].legend()
     
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"Saved comparison plot to {save_path}")
-    
+
 def plot_nc_multilayer(metrics_all, layer_names, save_path, title_prefix=""):
     """
     Plot NC1 (within-class variance), NC2 (mean pairwise distance),
