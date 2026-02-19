@@ -4,7 +4,7 @@ from numpy.linalg import pinv
 from scipy.special import softmax
 
 from models.resnet import BasicBlock, ResNet18
-from dataset.cifar100 import trainloader as cifar100_trainloader, testloader as cifar100_testloader
+from dataset.cifar100 import get_cifar100_loaders
 from dataset.svhn import get_svhn_ood_loader
 import OODmethods as ood_methods
 
@@ -55,6 +55,7 @@ def main():
     model.to(DEVICE)
     
     print("Extracting features from ID dataset (CIFAR-100)...")
+    cifar100_trainloader, cifar100_testloader, _ = get_cifar100_loaders(batch_size=BATCH_SIZE, num_workers=NUM_WORKERS)
     feature_id_train, train_labels = extract_features(model, cifar100_trainloader, DEVICE)
     feature_id_val, _ = extract_features(model, cifar100_testloader, DEVICE)
     
