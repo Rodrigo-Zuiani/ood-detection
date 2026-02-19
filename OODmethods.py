@@ -4,7 +4,7 @@ from numpy.linalg import norm
 from scipy.special import logsumexp
 from sklearn.covariance import EmpiricalCovariance
 from tqdm import tqdm
-from . import OODutils as utils
+import OODutils as utils
 
 recall = 0.95
 
