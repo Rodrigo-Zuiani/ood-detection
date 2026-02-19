@@ -69,6 +69,6 @@ def neco(feature_id_train, feature_id_val, feature_ood, neco_dim):
     score_ood = l_OOD
     auc_ood = auc(score_id, score_ood)[0]
     recall = 0.95
-    fpr_ood, _ = fprr(score_id, score_ood, recall)
+    fpr_ood = fprr(score_id, score_ood, recall)
     print(f'NECO: Area Under Curve (ROC)={auc_ood}, False Positive Rate={fpr_ood}')
     
