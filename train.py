@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
-from .models.resnet import BasicBlock, ResNet18
-from .dataset.cifar100 import get_cifar100_loaders
+from models.resnet import BasicBlock, ResNet18
+from dataset.cifar100 import get_cifar100_loaders
 import os
 import random
 import numpy as np
@@ -80,12 +80,12 @@ train_losses, train_acc_list, test_acc_list = [], [], []
 # Make sure folders exist
 os.makedirs("checkpoints", exist_ok=True)
 os.makedirs("logs", exist_ok=True)
-log_csv_path = "src/logs/train_log.csv"
+log_csv_path = "logs/train_log.csv"
 logging.basicConfig(
     level=logging.INFO,  # INFO, DEBUG, WARNING, ERROR
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
-        logging.FileHandler("src/logs/logging.txt"),
+        logging.FileHandler("logs/logging.txt"),
         logging.StreamHandler()  # prints to console
     ]
 )
