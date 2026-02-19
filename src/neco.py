@@ -8,7 +8,7 @@ from .dataset.cifar100 import get_cifar100_loaders
 from .dataset.svhn import get_svhn_ood_loader
 from .utils.ood_utils import neco
 
-CHECKPOINT = "checkpoints/resnet18_cifar100_epoch_450.pt"
+CHECKPOINT = "src/checkpoints/resnet18_cifar100_epoch_450.pt"
 BATCH_SIZE = 128
 NUM_WORKERS = 2
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -83,7 +83,7 @@ def main():
     print('='*80)
     
     print('\n[1/1] NECO')
-    neco(feature_id_train, feature_id_val, feature_ood, 10)
+    neco(feature_id_train, feature_id_val, feature_ood, 200)
     
     print('\n' + '='*80)
     print('OOD Detection Complete')
