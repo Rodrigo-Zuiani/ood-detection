@@ -14,3 +14,7 @@ This branch contains the code for the first two bullet points in the overview se
 ## NeuralCollapse
 
 This branch contains the code for the last bullet point in the overview section and the NECO OOD decection method.
+
+# Report
+
+The [Report (PDF)](./report.pdf) can be found in the root directory of both branches.
