@@ -17,4 +17,5 @@ This branch contains the code for the last bullet point in the overview section 
 
 # Report
 
-The [Report (PDF)](./report.pdf) can be found in the root directory of both branches.
+The [Report (PDF)](./CV_report.pdf) can be found in the root directory of both branches.
+
